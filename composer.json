@@ -1,0 +1,17 @@
+{
+    "name": "ow/manageable",
+    "authors": [
+        {
+            "name": "Fausto Rodrigues",
+            "email": "fausto.rodrigues@owinteractive.com"
+        }
+    ],
+    "require": {},
+        "extra": {
+        "laravel": {
+            "providers": [
+                "Ow\\Manageable\\ServiceProvider"
+            ]
+        }
+    },
+}
