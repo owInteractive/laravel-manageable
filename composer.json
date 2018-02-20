@@ -6,12 +6,14 @@
             "email": "fausto.rodrigues@owinteractive.com"
         }
     ],
-    "require": {},
-        "extra": {
+    "require": {
+        "laravel/framework": "5.4.*|5.5.*"
+    },
+    "extra": {
         "laravel": {
             "providers": [
                 "Ow\\Manageable\\ServiceProvider"
             ]
         }
-    },
+    }
 }
