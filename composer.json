@@ -28,7 +28,7 @@
                 "Ow\\Manageable\\ServiceProvider"
             ],
             "aliases": {
-                "Manager": "Ow\\Manageable\\Facade"
+                "Manageable": "Ow\\Manageable\\Facade"
             }
         }
     },

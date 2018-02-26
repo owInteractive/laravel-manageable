@@ -11,7 +11,7 @@ class Facade extends IlluminateFacade
 {
     protected static function getFacadeAccessor()
     {
-        return 'manager';
+        return 'manageable';
     }
 
    /**

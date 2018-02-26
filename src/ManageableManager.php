@@ -2,7 +2,7 @@
 
 namespace Ow\Manageable;
 
-class Manager
+class ManageableManager
 {
     //
 }
