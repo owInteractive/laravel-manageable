@@ -9,57 +9,42 @@ use Illuminate\Routing\Controller as BaseController;
 use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
-use Ow\Manageable\Http\Traits\Crudful;
-
 class Controller extends BaseController
 {
-    use AuthorizesRequests, DispatchesJobs, ValidatesRequests, CRUDful;
+    use AuthorizesRequests, DispatchesJobs, ValidatesRequests;
 
     protected $status_code = Response::HTTP_OK;
 
     protected $success_status = true;
 
-    protected $message = null;
+    protected $message = '';
 
     protected $message_level = 'success';
 
-    /**
-     * @return mixed
-     */
     public function getMessage()
     {
         return $this->message;
     }
 
-    /**
-     * @param mixed $message
-     */
     public function setMessage($message)
     {
-        $this->message = trim($message);
+        if (is_string($message)) {
+            $this->message = trim($message);
+        }
 
         return $this;
     }
 
-    /**
-     * @param mixed $message
-     */
     public function hasMessage()
     {
         return is_string($this->message) && (trim($this->message) !== '');
     }
 
-    /**
-     * @return mixed
-     */
     public function getMessageLevel()
     {
         return $this->message_level;
     }
 
-    /**
-     * @param mixed $message_level
-     */
     public function setMessageLevel($message_level)
     {
         $this->message_level = trim($message_level);
@@ -67,17 +52,11 @@ class Controller extends BaseController
         return $this;
     }
 
-    /**
-     * @return mixed
-     */
     public function getStatusCode()
     {
         return $this->status_code;
     }
 
-    /**
-     * @param mixed $status_code
-     */
     public function setStatusCode($status_code)
     {
         $this->status_code = $status_code;
@@ -85,19 +64,11 @@ class Controller extends BaseController
         return $this;
     }
 
-    /**
-     * @return mixed
-     */
     public function getSuccessStatus()
     {
         return $this->success_status;
     }
 
-    /**
-     * @param $value
-     * @return $this
-     * @internal param mixed $status_code
-     */
     public function setSuccessStatus($value)
     {
         $this->success_status = $value;
@@ -107,64 +78,73 @@ class Controller extends BaseController
 
     public function respondUnauthorized($message = 'Unauthorized Access. Please login')
     {
-        return $this->setStatusCode(Response::HTTP_UNAUTHORIZED)
-            ->setMessage($this->message ?: $message)
-            ->respondWithError($message);
+        if ($message == 'Unauthorized Access. Please login') {
+            //
+        }
+
+        return $this->setStatusCode(Response::HTTP_UNAUTHORIZED)->setMessage($message)->respondWithError($message);
     }
 
-    public function respondForbidden($message = 'Forbidden.')
+    public function respondForbidden($errors = [], $message = '')
     {
-        return $this->setStatusCode(Response::HTTP_FORBIDDEN)
-            ->setMessage($this->message ?: $message)
-            ->respondWithError($message);
+        $this->setMessage($message ?: trans('error.forbidden'));
+
+        return $this->setStatusCode(Response::HTTP_FORBIDDEN)->respondWithError($errors);
     }
 
-    public function respondNotFound($message = 'Not Found.')
+    public function respondNotFound($errors = [], $message = '')
     {
-        return $this->setStatusCode(Response::HTTP_NOT_FOUND)
-            ->setMessage($this->message ?: $message)
-            ->respondWithError($message);
+        $this->setMessage($message ?: trans('error.not_found'));
+
+        return $this->setStatusCode(Response::HTTP_NOT_FOUND)->respondWithError($errors);
     }
 
-    public function respondUnprocessableEntity($message = 'Parameters failed validation')
+    public function respondUnprocessableEntity($errors = [], $message = '')
     {
+        $this->setMessage($message ?: trans('error.unprocessable_entity'));
+
         return $this->setStatusCode(Response::HTTP_UNPROCESSABLE_ENTITY)
-            ->setMessage($this->message ?: $message)
-            ->respondWithError(['validation' => $message]);
+            ->setMessage($message)
+            ->respondWithError($errors);
     }
 
-    public function respondInternalError($message = 'Internal Error.')
+    public function respondInternalError($message = null)
     {
+        if ($message == null) {
+            $message =  trans('messages/errors.http.500');
+        }
+
         return $this->setStatusCode(Response::HTTP_INTERNAL_SERVER_ERROR)
-            ->setMessage($this->message ?: $message)
+            ->setMessage($message)
             ->respondWithError($message);
     }
 
-    public function respondWithError($errors)
+    public function respondWithError($errors = [])
     {
         $this->setSuccessStatus(false);
 
+        if ($this->getStatusCode() < 400) {
+            $this->setStatusCode(Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+
         return $this->respond([
+            'message' => $this->getMessage() ?: trans('error.internal_server_error'),
             'errors' => $errors
         ]);
     }
 
-    public function respondAccepted($message = '')
+    public function respondAccepted($data = [], $message = '')
     {
-        return $this->setStatusCode(Response::HTTP_ACCEPTED)
-            ->setMessage($this->message ?: $message)
-            ->respond($message);
+        return $this->setStatusCode(Response::HTTP_ACCEPTED)->respond($message);
     }
 
 
-    public function respondCreated($message = '')
+    public function respondCreated($data = [], $message = '')
     {
-        return $this->setStatusCode(Response::HTTP_CREATED)
-            ->setMessage($this->message ?: $message)
-            ->respond($message);
+        return $this->setStatusCode(Response::HTTP_CREATED)->respond($message);
     }
 
-    public function respond($data = '', $headers = [])
+    public function respond($data = [], $headers = [])
     {
         $response = response()->json($data, $this->getStatusCode(), $headers)
             ->header('Content-Type', 'application/json');
@@ -172,29 +152,43 @@ class Controller extends BaseController
         return $this->addMessage($response);
     }
 
-    /**
-     * @param Request $request
-     * @param $data
-     * @return \Illuminate\Http\Response
-     */
-    protected function respondWithPagination($data, Request $request)
+    protected function respondWithPagination(Request $request, $data)
     {
-        // if ($request->paginate()) {
-            $json = $data->getCollection()->toJson();
+        if ($data instanceof \Illuminate\Pagination\LengthAwarePaginator) {
+            $collection = $data->getCollection()->toArray();
 
-            $response = response()->make($json);
+            if (config('app.api.pagination.body', false)) {
+                $pagination = $data->toArray();
+                unset($pagination['data']);
+
+                $search_query = $request->has('_search') ? ('_search=' . $request->input('_search')) : '' ;
+                $pagination['query_string'] = $search_query;
+
+                // Adds the count
+                $pagination['count'] = count($collection);
+
+                $response = response()->make([
+                    'data' => [
+                        'collection' => $collection,
+                        'pagination' => $pagination,
+                    ],
+                ]);
+            } else {
+                $response = response()->make($collection);
+            }
+
+            $response->header('X-query-string', $search_query);
             $response->header('X-total', $data->total());
             $response->header('X-offset', $data->perPage());
             $response->header('X-page', $data->currentPage());
             $response->header('X-last-page', ceil($data->total() / $data->perPage()));
-        // } else {
-        //     $json = $data->toJson();
-        //     $response = response()->make($json);
-        // }
+        } else {
+            $response = response()->make($data->toJson());
+        }
 
         $response->header('Content-Type', 'application/json');
 
-        return $this->addMessage($response);
+        return $response;
     }
 
     protected function addMessage($response)
@@ -207,21 +201,14 @@ class Controller extends BaseController
         return $response;
     }
 
-    // /**
-    //  * @param Request $request
-    //  * @return mixed
-    //  */
-    // protected function findAllPaginated(Request $request, &$model)
-    // {
-    //     $limit = $limit = $request->input('limit', 5);
-    //     $limit < 50 ?: $limit = 50;
+    protected function logOrThrow($e)
+    {
+        if (config('app.debug') !== true) {
+            Log::error($e->getMessage());
 
-    //     return $model::paginate($limit);
-    // }
+            return;
+        }
 
-    // protected function firstOrFail($params)
-    // {
-    //     $this->setStatusCode(Response::HTTP_INTERNAL_SERVER_ERROR);
-    //     $this->respondWithError("Implement your firstOrFail method on the child class if needed!");
-    // }
+        throw $e;
+    }
 }
