@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use ReflectionClass;
 
-trait ResolveEntityRequestTrait
+trait ResolveEntityRequest
 {
     protected function resolveEntityRequest($entity_class)
     {
