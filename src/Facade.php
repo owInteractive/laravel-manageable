@@ -19,7 +19,7 @@ class Facade extends IlluminateFacade
      *
      * @return void
      */
-    public function routes()
+    public static function routes()
     {
         // Authentication Routes...
         Route::group(['as' => 'manageable.'], function () {
