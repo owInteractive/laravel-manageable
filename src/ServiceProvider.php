@@ -28,6 +28,10 @@ class ServiceProvider extends IlluminateServiceProvider
     public function register()
     {
         $this->mergeConfigFrom(__DIR__ . '/config.php', 'manageable');
+
+        $this->app->bind('manager', function ($app) {
+            return new Manager();
+        });
     }
 
     protected function bootRoutes()
