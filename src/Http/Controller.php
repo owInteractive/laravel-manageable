@@ -11,11 +11,10 @@ use Illuminate\Foundation\Bus\DispatchesJobs;
 use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Ow\Manageable\Http\Traits\Crudful;
-use Ow\Manageable\Http\Traits\ResolveEntityRequest;
 
 class Controller extends BaseController
 {
-    use AuthorizesRequests, DispatchesJobs, ValidatesRequests, Crudful, ResolveEntityRequest;
+    use AuthorizesRequests, DispatchesJobs, ValidatesRequests, Crudful;
 
     protected $status_code = Response::HTTP_OK;
 
