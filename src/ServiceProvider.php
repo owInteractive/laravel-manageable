@@ -30,7 +30,7 @@ class ServiceProvider extends IlluminateServiceProvider
         $this->mergeConfigFrom(__DIR__ . '/config.php', 'manageable');
 
         $this->app->bind('manager', function ($app) {
-            return new Manager();
+            return new \Ow\Manageable\Manager();
         });
     }
 
