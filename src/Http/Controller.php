@@ -15,7 +15,7 @@ use Ow\Manageable\Http\Traits\ResolveEntityRequest;
 
 class Controller extends BaseController
 {
-    use AuthorizesRequests, DispatchesJobs, ValidatesRequests, CRUDful, ResolveEntityRequest;
+    use AuthorizesRequests, DispatchesJobs, ValidatesRequests, Crudful, ResolveEntityRequest;
 
     protected $status_code = Response::HTTP_OK;
 
