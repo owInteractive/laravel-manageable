@@ -36,10 +36,10 @@ class ServiceProvider extends IlluminateServiceProvider
 
     protected function bootRoutes()
     {
-        $this->loadRoutesFrom(__DIR__ . '/routes.php');
+        // $this->loadRoutesFrom(__DIR__ . '/routes.php');
 
         $this->publishes([
-            __DIR__ . '/routes/config.php' => base_path('routes/manageble.php'),
+            __DIR__ . '/routes/manageable.php' => base_path('routes/manageble.php'),
         ], 'routes');
 
         // Tries to get the routes configuration from the routes/manageable.php

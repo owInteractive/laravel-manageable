@@ -12,14 +12,11 @@ use Illuminate\Http\Request;
 use Sentinel;
 use DB;
 
-use App\Http\Traits\Controllers\ResolveEntityRequestTrait;
-
-// @todo use on a configuration allow multiple presenters
-use App\Http\Traits\Controllers\BindToFalseTrait;
+use Ow\Manageable\Http\Traits\ResolveEntityRequestTrait;
 
 trait Crudful
 {
-    use ResolveEntityRequestTrait, BindToFalseTrait;
+    use ResolveEntityRequestTrait;
 
     protected $last_inserted_id = null;
 
@@ -44,8 +41,7 @@ trait Crudful
         }
 
         // Set presenter by policy transformer
-
-        return $this->respondWithPagination($request, $this->bindToFalse($collection));
+        return $this->respondWithPagination($collection, $request);
     }
 
     public function show($entity_name, $entity_id, Request $request)
@@ -67,7 +63,7 @@ trait Crudful
 
         // Set presenter by policy transformer
 
-        return $this->respond($this->bindToFalse($instance));
+        return $this->respond($instance);
     }
 
     public function store($entity_name, Request $request)
@@ -157,7 +153,7 @@ trait Crudful
             ->unshiftCriteria(new Criteria($request))
             ->findWithoutFail($entity_id);
 
-        return $this->respond($this->bindToFalse($model));
+        return $this->respond($model);
     }
 
     public function destroy($entity_name, $entity_id, Request $request)
