@@ -12,12 +12,8 @@ use Illuminate\Http\Request;
 use Sentinel;
 use DB;
 
-use Ow\Manageable\Http\Traits\ResolveEntityRequestTrait;
-
 trait Crudful
 {
-    use ResolveEntityRequestTrait;
-
     protected $last_inserted_id = null;
 
     public function index($entity_name, Request $request)
