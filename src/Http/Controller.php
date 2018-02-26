@@ -2,16 +2,20 @@
 
 namespace Ow\Manageable\Http;
 
+use Illuminate\Routing\Controller as BaseController;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Log;
+
 use Illuminate\Foundation\Bus\DispatchesJobs;
-use Illuminate\Routing\Controller as BaseController;
 use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Ow\Manageable\Http\Traits\Crudful;
+use Ow\Manageable\Http\Traits\ResolveEntityRequest;
 
 class Controller extends BaseController
 {
-    use AuthorizesRequests, DispatchesJobs, ValidatesRequests;
+    use AuthorizesRequests, DispatchesJobs, ValidatesRequests, CRUDful, ResolveEntityRequest;
 
     protected $status_code = Response::HTTP_OK;
 
