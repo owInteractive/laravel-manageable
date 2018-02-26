@@ -23,31 +23,31 @@ class Facade extends IlluminateFacade
     {
         // Authentication Routes...
         Route::group(['as' => 'manageable.'], function () {
-            Route::get('/{entity}', Controller::class . '@index')
+            Route::get('/{entity}', '\\' . Controller::class . '@index')
                 ->where('entity', '[a-zA-Z\/\-]*')
                 ->name('index');
 
-            Route::post('/{entity}', Controller::class . '@store')
+            Route::post('/{entity}', '\\' . Controller::class . '@store')
                 ->where('entity', '[a-zA-Z\/\-]*')
                 ->name('store');
 
-            Route::get('/{entity}/{id}', Controller::class . '@show')
+            Route::get('/{entity}/{id}', '\\' . Controller::class . '@show')
                 ->where('id', '[0-9]+')
                 ->where('entity', '[a-zA-Z\/\-]*')
                 ->name('show');
 
-            Route::put('/{entity}/{id}', Controller::class . '@update')
+            Route::put('/{entity}/{id}', '\\' . Controller::class . '@update')
                 ->where('id', '[0-9]+')
                 ->where('entity', '[a-zA-Z\/\-]*')
                 ->name('update');
 
-            Route::delete('/{entity}/{id}', Controller::class . '@destroy')
+            Route::delete('/{entity}/{id}', '\\' . Controller::class . '@destroy')
                 ->where('id', '[0-9]+')
                 ->where('entity', '[a-zA-Z\/\-]*')
                 ->name('destroy');
 
             // Uploads media
-            Route::post('/{entity}/{id}/media', Controller::class . '@uploadMedia')
+            Route::post('/{entity}/{id}/media', '\\' . Controller::class . '@uploadMedia')
                 ->where('id', '[0-9]+')
                 ->where('entity', '[a-zA-Z\/\-]*')
                 ->name('media.store');
