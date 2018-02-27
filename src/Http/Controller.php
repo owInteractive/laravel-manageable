@@ -11,11 +11,17 @@ use Illuminate\Foundation\Bus\DispatchesJobs;
 use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Ow\Manageable\Http\Traits\Crudful;
+use Ow\Manageable\Http\Traits\ProcessFileAndMedia;
 use Ow\Manageable\Http\Traits\ResolveEntityRequest;
 
 class Controller extends BaseController
 {
-    use AuthorizesRequests, DispatchesJobs, ValidatesRequests, Crudful, ResolveEntityRequest;
+    use AuthorizesRequests,
+        DispatchesJobs,
+        ValidatesRequests,
+        Crudful, // index, show, store, update, destroy
+        ProcessFileAndMedia, // upload, download, media
+        ResolveEntityRequest; // resolveRequest
 
     protected $status_code = Response::HTTP_OK;
 
@@ -80,13 +86,11 @@ class Controller extends BaseController
         return $this;
     }
 
-    public function respondUnauthorized($message = 'Unauthorized Access. Please login')
+    public function respondUnauthorized($errors = [], $message = '')
     {
-        if ($message == 'Unauthorized Access. Please login') {
-            //
-        }
+        $this->setMessage($message ?: trans('error.unauthorized'));
 
-        return $this->setStatusCode(Response::HTTP_UNAUTHORIZED)->setMessage($message)->respondWithError($message);
+        return $this->setStatusCode(Response::HTTP_UNAUTHORIZED)->respondWithError($message);
     }
 
     public function respondForbidden($errors = [], $message = '')
@@ -158,6 +162,7 @@ class Controller extends BaseController
 
     protected function respondWithPagination(Request $request, $data)
     {
+        $search_query = $request->has('_search') ? ('_search=' . $request->input('_search')) : '' ;
         if ($data instanceof \Illuminate\Pagination\LengthAwarePaginator) {
             $collection = $data->getCollection()->toArray();
 
@@ -165,10 +170,7 @@ class Controller extends BaseController
                 $pagination = $data->toArray();
                 unset($pagination['data']);
 
-                $search_query = $request->has('_search') ? ('_search=' . $request->input('_search')) : '' ;
                 $pagination['query_string'] = $search_query;
-
-                // Adds the count
                 $pagination['count'] = count($collection);
 
                 $response = response()->make([

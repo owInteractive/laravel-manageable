@@ -37,7 +37,7 @@ trait Crudful
         }
 
         // Set presenter by policy transformer
-        return $this->respondWithPagination($collection, $request);
+        return $this->respondWithPagination($request, $collection);
     }
 
     public function show($entity_name, $entity_id, Request $request)
@@ -83,11 +83,9 @@ trait Crudful
             $builder = new EntityBuilder($entity);
             $model = $builder->create($input);
 
-            $this->postInterfaces($model, $entity_request);
+            $model->postProcess($entity_request->all());
 
             $this->setMessage("{$entity_name} criada com sucesso");
-
-            $this->last_inserted_id = $model->id;
 
             DB::commit();
         } catch (\Exception $e) {
@@ -99,7 +97,9 @@ trait Crudful
         }
 
         $response = $this->respondCreated();
+
         $response->header('X-Last-Inserted-Id', $model->id ?: null);
+
         return $response;
     }
 
@@ -124,16 +124,14 @@ trait Crudful
 
         DB::beginTransaction();
         try {
-            // $this->visa_users = collect([]);
+            $entity->preProcess($entity_request->all());
 
             $builder = new EntityBuilder($instance);
             $entity = $builder->update($entity_id, $input);
 
-            $this->postInterfaces($entity, $entity_request);
+            $entity->postProcess($entity_request->all());
 
             $this->setMessage("{$entity_name} atualizado com sucesso");
-
-            $this->last_inserted_id = $entity->id;
 
             DB::commit();
         } catch (\Exception $e) {
@@ -174,26 +172,6 @@ trait Crudful
         $this->setMessage("{$entity_name} removido com sucesso");
 
         return $this->respondAccepted();
-    }
-
-    // protected function preInterfaces($model_instance, $request)
-    // {
-    //     // If the controller implements the VisaControll and also the model, lets get the users to update the visa
-    //     if ($this instanceof VisaControl  && $model_instance instanceof ModelVisaControl) {
-    //         // We will update for all visas associated with this model, so no need to specify the visa group
-    //         $this->visa_users = $model_instance->upstreamList();
-    //     }
-
-    //     return;
-    // }
-
-    protected function postInterfaces($model_instance, $request)
-    {
-        if ($model_instance instanceof \App\Services\Permissions\Interfaces\VisaControl
-            && method_exists($this, 'regenerateVisas')
-        ) {
-            $this->regenerateVisas($model_instance, $model_instance->visasFor());
-        }
     }
 
     protected function checkPolicies($entity, $action, $user = null)

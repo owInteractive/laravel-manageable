@@ -23,6 +23,16 @@ class Facade extends IlluminateFacade
     {
         // Authentication Routes...
         Route::group(['as' => 'manageable.'], function () {
+            // Media related (more specific)
+            Route::post('/media', '\\' . Controller::class . '@media')
+                ->name('media.store');
+
+            Route::post('/{entity}/{id}/media', '\\' . Controller::class . '@mediaTo')
+                ->where('id', '[0-9]+')
+                ->where('entity', '[a-zA-Z\/\-]*')
+                ->name('media.store');
+
+            // Management entities
             Route::get('/{entity}', '\\' . Controller::class . '@index')
                 ->where('entity', '[a-zA-Z\/\-]*')
                 ->name('index');
@@ -45,12 +55,6 @@ class Facade extends IlluminateFacade
                 ->where('id', '[0-9]+')
                 ->where('entity', '[a-zA-Z\/\-]*')
                 ->name('destroy');
-
-            // Uploads media
-            Route::post('/{entity}/{id}/media', '\\' . Controller::class . '@uploadMedia')
-                ->where('id', '[0-9]+')
-                ->where('entity', '[a-zA-Z\/\-]*')
-                ->name('media.store');
         });
     }
 }

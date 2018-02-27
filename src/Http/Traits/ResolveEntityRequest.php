@@ -3,7 +3,7 @@
 namespace Ow\Manageable\Http\Traits;
 
 use Ow\Manageable\Entities\EntityFactory;
-use Illuminate\Http\Request;
+use Ow\Manageable\Http\Request;
 use Illuminate\Support\Facades\Log;
 use ReflectionClass;
 
