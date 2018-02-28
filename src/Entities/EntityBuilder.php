@@ -25,11 +25,18 @@ class EntityBuilder
     {
         $entity = $this->entity->newInstance($attributes);
         $entity->save();
+
         $this->resetEntity();
 
-        // event(new EntityCreated($this, $entity));
+        $event = EventFactory::build($entity, $attributes, 'stored');
+        if ($event !== null) {
+            event($event);
+        }
+
+        $entity->postProcess($attributes);
 
         $entity = $this->updateRelations($entity, $attributes);
+
         $entity->save();
 
         return $entity;
@@ -49,15 +56,14 @@ class EntityBuilder
 
         $entity->fill($attributes);
 
-        // Sometimes the keyname is not fillable
-        // $primary_key = $entity->getKeyName();
-        // $entity->{$primary_key} = $id;
-
         $entity->save();
 
         $this->resetEntity();
 
-        // event(new EntityUpdated($this, $entity));
+        $event = EventFactory::build($entity, $attributes, 'updated');
+        if ($event !== null) {
+            event($event);
+        }
 
         $entity = $this->updateRelations($entity, $attributes);
 
@@ -81,6 +87,7 @@ class EntityBuilder
                     switch ($method_class) {
                         case Relations\MorphToMany::class:
                             $morph = true;
+                            // Same behaviour for the BelongsToMany
                         case Relations\BelongsToMany::class:
                             $new_values = array_get($attributes, $key, []);
 
@@ -297,6 +304,10 @@ class EntityBuilder
                                             }
 
                                             $related_builder = new EntityBuilder($related_model);
+
+                                            // dump('hasmany array');
+                                            // dump($val);
+                                            // dd($has_primary_key !== false && !empty($val[$primary_key]));
 
                                             if ($has_primary_key !== false && !empty($val[$primary_key])) {
                                                 $related_builder->update((int) $val[$primary_key], $val);

@@ -83,8 +83,6 @@ trait Crudful
             $builder = new EntityBuilder($entity);
             $model = $builder->create($input);
 
-            $model->postProcess($entity_request->all());
-
             $this->setMessage("{$entity_name} criada com sucesso");
 
             DB::commit();
@@ -172,25 +170,5 @@ trait Crudful
         $this->setMessage("{$entity_name} removido com sucesso");
 
         return $this->respondAccepted();
-    }
-
-    protected function checkPolicies($entity, $action, $user = null)
-    {
-        $user = $user ?: Sentinel::getUser();
-        $entity_class = get_class($entity);
-
-        if (isset(config('manageable.custom_policies')[$entity_class])) {
-            foreach (config('manageable.custom_policies')[$entity_class] as $policy_class) {
-                $policy = new $policy_class($entity);
-
-                if (is_callable([$policy, $action])) {
-                    if (!$policy->{$action}(Sentinel::getUser(), resolve(Request::class)->all())) {
-                        throw new \Illuminate\Auth\Access\AuthorizationException;
-                    }
-                }
-            }
-        }
-
-        return;
     }
 }

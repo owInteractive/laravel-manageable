@@ -6,22 +6,17 @@ use Illuminate\Routing\Controller as BaseController;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Log;
+use Cartalyst\Sentinel\Laravel\Facades\Sentinel;
 
 use Illuminate\Foundation\Bus\DispatchesJobs;
 use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
-use Ow\Manageable\Http\Traits\Crudful;
-use Ow\Manageable\Http\Traits\ProcessFileAndMedia;
-use Ow\Manageable\Http\Traits\ResolveEntityRequest;
 
 class Controller extends BaseController
 {
     use AuthorizesRequests,
         DispatchesJobs,
-        ValidatesRequests,
-        Crudful, // index, show, store, update, destroy
-        ProcessFileAndMedia, // upload, download, media
-        ResolveEntityRequest; // resolveRequest
+        ValidatesRequests;
 
     protected $status_code = Response::HTTP_OK;
 
@@ -216,5 +211,25 @@ class Controller extends BaseController
         }
 
         throw $e;
+    }
+
+    protected function checkPolicies($entity, $action, $user = null)
+    {
+        $user = $user ?: Sentinel::getUser();
+        $entity_class = get_class($entity);
+
+        if (isset(config('manageable.custom_policies')[$entity_class])) {
+            foreach (config('manageable.custom_policies')[$entity_class] as $policy_class) {
+                $policy = new $policy_class($entity);
+
+                if (is_callable([$policy, $action])) {
+                    if (!$policy->{$action}(Sentinel::getUser(), resolve(Request::class)->all())) {
+                        throw new \Illuminate\Auth\Access\AuthorizationException;
+                    }
+                }
+            }
+        }
+
+        return;
     }
 }
