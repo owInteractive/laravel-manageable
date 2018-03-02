@@ -12,6 +12,8 @@ class Policy implements PolicyContract
 {
     protected $entity;
 
+    protected $entity_class;
+
     public function __construct(Manageable $entity)
     {
         $this->entity = $entity;
@@ -20,31 +22,32 @@ class Policy implements PolicyContract
 
     public function access(Authorizable $user, Manageable $entity)
     {
-        // Has gate 'access-entity' defined? yes >> apply it
+        // Has gate 'access-entity' defined? yes >> apply it //
         return true;
     }
 
-    public function create(Authorizable $user, Manageable $entity)
+    public function index(Authorizable $user, $params = [])
     {
         return true;
     }
 
-    public function update(Authorizable $user, Manageable $entity)
+    public function store(Authorizable $user, $params = [])
     {
         return true;
     }
 
-    public function destroy(Authorizable $user, Manageable $entity)
+    public function update(Authorizable $user, $params = [])
     {
         return true;
     }
 
-    public function restore(Authorizable $user, Manageable $entity)
+    public function destroy(Authorizable $user, $params = [])
     {
         return true;
     }
 
-    // Field control
-
-    // Visa Control per policy
+    public function restore(Authorizable $user, $params = [])
+    {
+        return true;
+    }
 }
