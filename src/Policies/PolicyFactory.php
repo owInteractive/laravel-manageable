@@ -46,11 +46,16 @@ class PolicyFactory
 
     public function check(User $user, $params = [])
     {
-        // dd(Route::parameters());
+
         $request = resolve(\Illuminate\Http\Request::class);
 
         if ($request->route()->hasParameter('entity')) {
             $entity = EntityFactory::build($request->route()->parameter('entity'));
+
+            if ($entity === null) {
+                throw new \Illuminate\Database\Eloquent\ModelNotFoundException;
+            }
+
             $policy = self::build($entity);
 
             list($controller, $action) = explode('@', Route::currentRouteAction());
