@@ -161,18 +161,20 @@ class Controller extends BaseController
         if ($data instanceof \Illuminate\Pagination\LengthAwarePaginator) {
             $collection = $data->getCollection()->toArray();
 
-            if (config('app.api.pagination.body', false)) {
+            if (config('app.api.body_pagination', false)) {
                 $pagination = $data->toArray();
                 unset($pagination['data']);
 
+                $search_query = $request->has('_search') ? ('_search=' . $request->input('_search')) : '' ;
                 $pagination['query_string'] = $search_query;
+
+                // Adds the count
                 $pagination['count'] = count($collection);
 
                 $response = response()->make([
-                    'data' => [
-                        'collection' => $collection,
-                        'pagination' => $pagination,
-                    ],
+                    'collection' => $collection,
+                    'pagination' => $pagination,
+                    'message' => $this->getMessage() ?: ''
                 ]);
             } else {
                 $response = response()->make($collection);
