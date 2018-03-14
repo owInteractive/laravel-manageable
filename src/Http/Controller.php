@@ -161,7 +161,7 @@ class Controller extends BaseController
         if ($data instanceof \Illuminate\Pagination\LengthAwarePaginator) {
             $collection = $data->getCollection()->toArray();
 
-            if (config('app.api.body_pagination', false)) {
+            if (config('manageable.pagination.body', false)) {
                 $pagination = $data->toArray();
                 unset($pagination['data']);
 

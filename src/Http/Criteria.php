@@ -122,29 +122,29 @@ class Criteria implements CriteriaContract
                         $table = $query->getModel()->getTable();
 
                         if (!is_null($value)) {
-                            if ($first_field || $force_and) {
-                                if (!is_null($relation)) {
-                                    $query->whereHas(
-                                        $relation,
-                                        function ($query) use ($field, $condition, $value) {
-                                            $query->where($field, $condition, $value);
-                                        }
-                                    );
-                                } else {
-                                    $query->where($table . '.' . $field, $condition, $value);
-                                }
+                            $method = $first_field || $force_and ? 'where' : 'orWhere';
+                            $is_in = strtolower($condition) === 'in';
 
-                                $first_field = false;
-                            } else {
-                                if (!is_null($relation)) {
-                                    $query->orWhereHas(
-                                        $relation,
-                                        function ($query) use ($field, $condition, $value) {
-                                            $query->where($field, $condition, $value);
+                            if ($is_in && is_string($value)) {
+                                $value = explode(',', $value);
+                            }
+
+                            if (!is_null($relation)) {
+                                $query->{$method . 'Has'}(
+                                    $relation,
+                                    function ($query) use ($field, $condition, $value, $is_in) {
+                                        if ($is_in) {
+                                            $query->whereIn($field, $value);
+                                            return;
                                         }
-                                    );
+                                        $query->where($field, $condition, $value);
+                                    }
+                                );
+                            } else {
+                                if ($is_in) {
+                                    $query->{$method . 'In'}($table . '.' . $field, $value);
                                 } else {
-                                    $query->orWhere($table . '.' . $field, $condition, $value);
+                                    $query->{$method}($table . '.' . $field, $condition, $value);
                                 }
                             }
                         }
