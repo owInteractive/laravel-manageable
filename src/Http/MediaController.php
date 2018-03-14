@@ -7,7 +7,7 @@ use Ow\Manageable\Contracts\Manageable;
 
 use Ow\Manageable\Entities\RepositoryFactory;
 use Ow\Manageable\Entities\EntityFactory;
-use Ow\Manageagle\Events\MediaAttachedTo;
+use Ow\Manageable\Events\MediaAttachedTo;
 use Ow\Manageable\Http\Criteria;
 use Ow\Manageable\Http\Request;
 
