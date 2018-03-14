@@ -124,13 +124,15 @@ class Criteria implements CriteriaContract
                         if (!is_null($value)) {
                             $method = $first_field || $force_and ? 'where' : 'orWhere';
                             $is_in = strtolower($condition) === 'in';
+                            
 
                             if ($is_in && is_string($value)) {
                                 $value = explode(',', $value);
                             }
 
                             if (!is_null($relation)) {
-                                $query->{$method . 'Has'}(
+                                $method .= 'Has';
+                                $query->{$method}(
                                     $relation,
                                     function ($query) use ($field, $condition, $value, $is_in) {
                                         if ($is_in) {
@@ -142,11 +144,14 @@ class Criteria implements CriteriaContract
                                 );
                             } else {
                                 if ($is_in) {
-                                    $query->{$method . 'In'}($table . '.' . $field, $value);
+                                    $method .= 'In';
+                                    $query->{$method}($table . '.' . $field, $value);
                                 } else {
                                     $query->{$method}($table . '.' . $field, $condition, $value);
                                 }
                             }
+
+                            $first_field = false;
                         }
                     }
                 }
