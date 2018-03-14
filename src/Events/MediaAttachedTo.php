@@ -1,6 +1,6 @@
 <?php
 
-namespace Ow\Manageagle\Events;
+namespace Ow\Manageable\Events;
 
 use Ow\Manageable\Contracts\Manageable;
 use Illuminate\Queue\SerializesModels;
