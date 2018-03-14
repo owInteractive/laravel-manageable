@@ -7,6 +7,7 @@ use Ow\Manageable\Contracts\Manageable;
 
 use Ow\Manageable\Entities\RepositoryFactory;
 use Ow\Manageable\Entities\EntityFactory;
+use Ow\Manageagle\Events\MediaAttachedTo;
 use Ow\Manageable\Http\Criteria;
 use Ow\Manageable\Http\Request;
 
@@ -44,6 +45,8 @@ class MediaController extends Controller
         $this->checkPolicies($entity, 'media-attach');
 
         $media = $this->processMedia($entity, $request);
+
+        event(new MediaAttachedTo($entity, $media));
 
         return $this->respond($this->parseMedia($media));
     }
