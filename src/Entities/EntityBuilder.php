@@ -212,7 +212,7 @@ class EntityBuilder
 
                                         $new_values[$model_key] = $model->{$parent_key};
                                         if (!empty($morph)) {
-                                            $new_values[$model_type] = $this->model();
+                                            $new_values[$model_type] = $this->entity_class;
                                         }
 
                                         $has_primary_key = array_search(
@@ -300,7 +300,7 @@ class EntityBuilder
 
                                             $val[$model_key] = $model->{$parent_key};
                                             if (!empty($morph)) {
-                                                $val[$model_type] = $this->model();
+                                                $val[$model_type] = $this->entity_class;
                                             }
 
                                             $related_builder = new EntityBuilder($related_model);
@@ -325,7 +325,7 @@ class EntityBuilder
                             break;
                         default:
                             Log::error("Relationship not specified to Repository: {$method_class} for", [
-                               'model' => $this->model(),
+                               'model' => $this->entity_class,
                                'attributes' => $attributes,
                                'key' => $key
                             ]);
