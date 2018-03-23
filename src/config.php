@@ -12,7 +12,7 @@ return [
             'filter' => '_filter',
             'search' => '_search',
             'search_fields' => '_search_fields',
-            'order' => 'order',
+            'order' => '_order',
         ],
     ],
 ];

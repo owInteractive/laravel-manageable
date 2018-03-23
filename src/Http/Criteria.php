@@ -63,10 +63,10 @@ class Criteria implements CriteriaContract
 
     protected function parseOrderBy($entity)
     {
-        $orderBy = $this->request->get(config('manageable.criteria.params.order', 'order'), null);
+        $order_by = $this->request->get(config('manageable.criteria.params.order', '_order'), null);
 
         if (!empty($orderBy)) {
-            $entity = $entity->orderBy($orderBy);
+            $entity = $entity->orderBy($order_by);
         }
 
         return $entity;
