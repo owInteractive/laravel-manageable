@@ -29,6 +29,7 @@ class Criteria implements CriteriaContract
         $entity = $this->parseSearch($entity);
         $entity = $this->parseFilter($entity);
         $entity = $this->parseWith($entity);
+        $entity = $this->parseOrderBy($entity);
 
         return $entity;
     }
@@ -55,6 +56,17 @@ class Criteria implements CriteriaContract
         if (!empty($with)) {
             $with = explode(';', $with);
             $entity = $entity->with($with);
+        }
+
+        return $entity;
+    }
+
+    protected function parseOrderBy($entity)
+    {
+        $order_by = $this->request->get(config('manageable.criteria.params.order', '_order'), null);
+
+        if (!empty($orderBy)) {
+            $entity = $entity->orderBy($order_by);
         }
 
         return $entity;
@@ -124,7 +136,7 @@ class Criteria implements CriteriaContract
                         if (!is_null($value)) {
                             $method = $first_field || $force_and ? 'where' : 'orWhere';
                             $is_in = strtolower($condition) === 'in';
-                            
+
 
                             if ($is_in && is_string($value)) {
                                 $value = explode(',', $value);
