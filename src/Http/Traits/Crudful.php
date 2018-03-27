@@ -96,7 +96,7 @@ trait Crudful
 
         $response = $this->respondCreated();
 
-        $response->header('X-Last-Inserted-Id', $model->id ?: null);
+        $response->header('X-last-inserted-id', $model->id ?: null);
 
         return $response;
     }
@@ -117,6 +117,8 @@ trait Crudful
         }
 
         $entity_request = $this->resolveEntityRequest(EntityFactory::name($entity_name));
+
+        $this->checkPolicies($entity, 'update');
 
         $input = $entity_request->fillable();
 
