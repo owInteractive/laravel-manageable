@@ -46,7 +46,6 @@ class PolicyFactory
 
     public function check(User $user, $params = [])
     {
-
         $request = resolve(\Illuminate\Http\Request::class);
 
         if ($request->route()->hasParameter('entity')) {

@@ -65,6 +65,8 @@ class EntityBuilder
             event($event);
         }
 
+        $entity->postProcess($attributes);
+
         $entity = $this->updateRelations($entity, $attributes);
 
         $entity->save();
