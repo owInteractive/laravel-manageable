@@ -5,6 +5,9 @@ namespace Ow\Manageable\Http;
 use Ow\Manageable\Contracts\RepositoryContract;
 use Ow\Manageable\Contracts\CriteriaContract;
 use Ow\Manageable\Contracts\Manageable;
+
+// use Illuminate\Database\Eloquent\Builder;
+// use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 
 class Criteria implements CriteriaContract
@@ -18,10 +21,16 @@ class Criteria implements CriteriaContract
 
     public function apply($entity, RepositoryContract $repository = null)
     {
+        // $orderBy = $this->request->get(config('repository.criteria.params.orderBy', 'orderBy'), null);
+        // $sortedBy = $this->request->get(config('repository.criteria.params.sortedBy', 'sortedBy'), 'asc');
+        // $searchJoin = $this->request->get(config('repository.criteria.params.searchJoin', 'searchJoin'), null);
+        // $sortedBy = !empty($sortedBy) ? $sortedBy : 'asc';
+
         $entity = $this->parseSearch($entity);
         $entity = $this->parseFilter($entity);
         $entity = $this->parseWith($entity);
         $entity = $this->parseOrderBy($entity);
+
         return $entity;
     }
 
@@ -88,9 +97,9 @@ class Criteria implements CriteriaContract
             $search = $this->parserSearchValue($search);
 
             $first_field = true;
-            $force_and = false;
+            $force_and = false; //strtolower($searchJoin) === 'and';
 
-            // @TODO REMOVER DA LINHA 93 a 101 e implementar a logica de N objetos com or or and e descomentar da 103 a 170
+            // @TODO REMOVER
             foreach ($fields_searchable as $search_field) {
                 $entity = $entity->orWhereRaw("{$search_field} like '%{$search}%'");
             }
@@ -98,7 +107,7 @@ class Criteria implements CriteriaContract
             foreach ($data as $data_field => $data_value) {
                 $entity = $entity->where($data_field, $data_value);
             }
-            // @TODO REMOVER DA LINHA 93 a 101 e implementar a logica de N objetos com or or and e descomentar da 103 a 170
+            // @TODO REMOVER
 
             // $entity = $entity->where(
             //     function ($query) use ($fields, $search, $data, $first_field, $force_and) {
@@ -137,6 +146,7 @@ class Criteria implements CriteriaContract
             //             if (!is_null($value)) {
             //                 $method = $first_field || $force_and ? 'where' : 'orWhere';
             //                 $is_in = strtolower($condition) === 'in';
+            //
             //
             //                 if ($is_in && is_string($value)) {
             //                     $value = explode(',', $value);
@@ -219,12 +229,13 @@ class Criteria implements CriteriaContract
             $fields = [];
 
             foreach ($search_fields as $index => $field) {
-                $field_parts = explode(':', $field);
+                $field_parts = explode(':', $field); // [key, values]
                 $tmp_index = array_search($field_parts[0], $original_fields);
 
                 if (count($field_parts) == 2) {
                     if (in_array($field_parts[1], $conditions)) {
                         unset($original_fields[$tmp_index]);
+
                         $field = $field_parts[0];
                         $condition = $field_parts[1];
                         $original_fields[$field] = $condition;
