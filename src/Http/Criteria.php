@@ -5,9 +5,6 @@ namespace Ow\Manageable\Http;
 use Ow\Manageable\Contracts\RepositoryContract;
 use Ow\Manageable\Contracts\CriteriaContract;
 use Ow\Manageable\Contracts\Manageable;
-
-// use Illuminate\Database\Eloquent\Builder;
-// use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 
 class Criteria implements CriteriaContract
@@ -21,17 +18,10 @@ class Criteria implements CriteriaContract
 
     public function apply($entity, RepositoryContract $repository = null)
     {
-        // $orderBy = $this->request->get(config('repository.criteria.params.orderBy', 'orderBy'), null);
-        // $sortedBy = $this->request->get(config('repository.criteria.params.sortedBy', 'sortedBy'), 'asc');
-        // $searchJoin = $this->request->get(config('repository.criteria.params.searchJoin', 'searchJoin'), null);
-        // $sortedBy = !empty($sortedBy) ? $sortedBy : 'asc';
-
         $entity = $this->parseSearch($entity);
         $entity = $this->parseFilter($entity);
         $entity = $this->parseWith($entity);
         $entity = $this->parseOrderBy($entity);
-        $entity = $this->parseStatus($entity);
-
         return $entity;
     }
 
@@ -73,17 +63,6 @@ class Criteria implements CriteriaContract
         return $entity;
     }
 
-    protected function parseStatus($entity)
-    {
-        $status = $this->request->get(config('manageable.criteria.params.status', '_status'), null);
-
-        if ($this->request->has(config('manageable.criteria.params.status', '_status'))) {
-            $entity = $entity->where('status', $status);
-        }
-
-        return $entity;
-    }
-
     protected function parseSearch($entity)
     {
         $fields_searchable = $entity->getSearchableFields();
@@ -109,77 +88,86 @@ class Criteria implements CriteriaContract
             $search = $this->parserSearchValue($search);
 
             $first_field = true;
-            $force_and = false; //strtolower($searchJoin) === 'and';
+            $force_and = false;
 
-            $entity = $entity->where(
-                function ($query) use ($fields, $search, $data, $first_field, $force_and) {
-                    foreach ($fields as $field => $condition) {
-                        if (is_numeric($field)) {
-                            $field = $condition;
-                            $condition = "=";
-                        }
+            // @TODO REMOVER DA LINHA 93 a 101 e implementar a logica de N objetos com or or and e descomentar da 103 a 170
+            foreach ($fields_searchable as $search_field) {
+                $entity = $entity->orWhereRaw("{$search_field} like '%{$search}%'");
+            }
 
-                        $value = null;
+            foreach ($data as $data_field => $data_value) {
+                $entity = $entity->where($data_field, $data_value);
+            }
+            // @TODO REMOVER DA LINHA 93 a 101 e implementar a logica de N objetos com or or and e descomentar da 103 a 170
 
-                        $condition = trim(strtolower($condition));
-
-                        if (isset($data[$field])) {
-                            $value = ($condition == "like" || $condition == "ilike")
-                                ? "%{$data[$field]}%"
-                                : $data[$field];
-                        } else {
-                            if (!is_null($search)) {
-                                $value = ($condition == "like" || $condition == "ilike")
-                                    ? "%{$search}%"
-                                    : $search;
-                            }
-                        }
-
-                        $relation = null;
-
-                        if (stripos($field, '.')) {
-                            $explode = explode('.', $field);
-                            $field = array_pop($explode);
-                            $relation = implode('.', $explode);
-                        }
-
-                        $table = $query->getModel()->getTable();
-
-                        if (!is_null($value)) {
-                            $method = $first_field || $force_and ? 'where' : 'orWhere';
-                            $is_in = strtolower($condition) === 'in';
-
-
-                            if ($is_in && is_string($value)) {
-                                $value = explode(',', $value);
-                            }
-
-                            if (!is_null($relation)) {
-                                $method .= 'Has';
-                                $query->{$method}(
-                                    $relation,
-                                    function ($query) use ($field, $condition, $value, $is_in) {
-                                        if ($is_in) {
-                                            $query->whereIn($field, $value);
-                                            return;
-                                        }
-                                        $query->where($field, $condition, $value);
-                                    }
-                                );
-                            } else {
-                                if ($is_in) {
-                                    $method .= 'In';
-                                    $query->{$method}($table . '.' . $field, $value);
-                                } else {
-                                    $query->{$method}($table . '.' . $field, $condition, $value);
-                                }
-                            }
-
-                            $first_field = false;
-                        }
-                    }
-                }
-            );
+            // $entity = $entity->where(
+            //     function ($query) use ($fields, $search, $data, $first_field, $force_and) {
+            //         foreach ($fields as $field => $condition) {
+            //             if (is_numeric($field)) {
+            //                 $field = $condition;
+            //                 $condition = "=";
+            //             }
+            //
+            //             $value = null;
+            //
+            //             $condition = trim(strtolower($condition));
+            //
+            //             if (isset($data[$field])) {
+            //                 $value = ($condition == "like" || $condition == "ilike")
+            //                     ? "%{$data[$field]}%"
+            //                     : $data[$field];
+            //             } else {
+            //                 if (!is_null($search)) {
+            //                     $value = ($condition == "like" || $condition == "ilike")
+            //                         ? "%{$search}%"
+            //                         : $search;
+            //                 }
+            //             }
+            //
+            //             $relation = null;
+            //
+            //             if (stripos($field, '.')) {
+            //                 $explode = explode('.', $field);
+            //                 $field = array_pop($explode);
+            //                 $relation = implode('.', $explode);
+            //             }
+            //
+            //             $table = $query->getModel()->getTable();
+            //
+            //             if (!is_null($value)) {
+            //                 $method = $first_field || $force_and ? 'where' : 'orWhere';
+            //                 $is_in = strtolower($condition) === 'in';
+            //
+            //                 if ($is_in && is_string($value)) {
+            //                     $value = explode(',', $value);
+            //                 }
+            //
+            //                 if (!is_null($relation)) {
+            //                     $method .= 'Has';
+            //                     $query->{$method}(
+            //                         $relation,
+            //                         function ($query) use ($field, $condition, $value, $is_in) {
+            //                             if ($is_in) {
+            //                                 $query->whereIn($field, $value);
+            //                                 return;
+            //                             }
+            //                             $query->where($field, $condition, $value);
+            //                         }
+            //                     );
+            //                 } else {
+            //                     if ($is_in) {
+            //                         $method .= 'In';
+            //                         $query->{$method}($table . '.' . $field, $value);
+            //                     } else {
+            //                         $query->{$method}($table . '.' . $field, $condition, $value);
+            //                     }
+            //                 }
+            //
+            //                 $first_field = false;
+            //             }
+            //         }
+            //     }
+            // );
         }
 
         return $entity;
@@ -231,13 +219,12 @@ class Criteria implements CriteriaContract
             $fields = [];
 
             foreach ($search_fields as $index => $field) {
-                $field_parts = explode(':', $field); // [key, values]
+                $field_parts = explode(':', $field);
                 $tmp_index = array_search($field_parts[0], $original_fields);
 
                 if (count($field_parts) == 2) {
                     if (in_array($field_parts[1], $conditions)) {
                         unset($original_fields[$tmp_index]);
-
                         $field = $field_parts[0];
                         $condition = $field_parts[1];
                         $original_fields[$field] = $condition;
