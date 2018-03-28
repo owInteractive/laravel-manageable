@@ -30,6 +30,7 @@ class Criteria implements CriteriaContract
         $entity = $this->parseFilter($entity);
         $entity = $this->parseWith($entity);
         $entity = $this->parseOrderBy($entity);
+        $entity = $this->parseStatus($entity);
 
         return $entity;
     }
@@ -68,6 +69,15 @@ class Criteria implements CriteriaContract
         if (!empty($order_by)) {
             $entity = $entity->orderBy($order_by);
         }
+
+        return $entity;
+    }
+
+    protected function parseStatus($entity)
+    {
+        $status = $this->request->get(config('manageable.criteria.params.status', '_status'), null);
+
+        $entity = $entity->where('status', $status);
 
         return $entity;
     }
