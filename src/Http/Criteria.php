@@ -77,7 +77,9 @@ class Criteria implements CriteriaContract
     {
         $status = $this->request->get(config('manageable.criteria.params.status', '_status'), null);
 
-        $entity = $entity->where('status', $status);
+        if ($this->request->has(config('manageable.criteria.params.status', '_status'))) {
+            $entity = $entity->where('status', $status);
+        }
 
         return $entity;
     }
