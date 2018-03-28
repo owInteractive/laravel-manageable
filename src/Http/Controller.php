@@ -157,7 +157,7 @@ class Controller extends BaseController
 
     protected function respondWithPagination(Request $request, $data)
     {
-        $search_query = $request->has('_search') ? ('_search=' . $request->input('_search')) : '' ;
+        $search_query = ''; //$request->has('_search') ? ('_search=' . $request->input('_search')) : '' ;
         if ($data instanceof \Illuminate\Pagination\LengthAwarePaginator) {
             $collection = $data->getCollection()->toArray();
 
@@ -165,7 +165,7 @@ class Controller extends BaseController
                 $pagination = $data->toArray();
                 unset($pagination['data']);
 
-                $search_query = $request->has('_search') ? ('_search=' . $request->input('_search')) : '' ;
+                $search_query = $search_query ?? $request->has('_search') ? ('_search=' . $request->input('_search')) : '' ;
                 $pagination['query_string'] = $search_query;
 
                 // Adds the count
