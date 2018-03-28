@@ -13,6 +13,7 @@ return [
             'search' => '_search',
             'search_fields' => '_search_fields',
             'order' => '_order',
+            'status' => '_status',
         ],
     ],
 ];
