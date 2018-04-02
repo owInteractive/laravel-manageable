@@ -83,4 +83,73 @@ class FileController extends Controller
 
         return $entry;
     }
+
+    public function download($entity_name, $entity_id, $file_id, Request $request)
+    {
+        $entity = EntityFactory::build($entity_name);
+
+        if ($entity === null || !$entity instanceof Manageable) {
+            return $this->respondNotFound();
+        }
+
+        $repository = RepositoryFactory::build($entity);
+        $entity = $repository->pushCriteria(new Criteria($request))
+            ->findWithoutFail($entity_id);
+
+        if ($entity === null) {
+            return $this->respondNotFound();
+        }
+
+        $file_entry = $entity->file()->find($file_id);
+
+        if (empty($file_entry)) {
+            return $this->respondNotFound();
+        }
+
+        // Grabs the file from the local storage
+        $fs = Storage::disk($file_entry->disk)->getDriver();
+        $file_name = $file_entry->file_name;
+        $stream = $fs->readStream($file_name);
+
+        return response()->stream(function () use ($stream) {
+            fpassthru($stream);
+        }, 200, [
+            "Content-Type" => $fs->getMimetype($file_name),
+            "Content-Length" => $fs->getSize($file_name),
+            "Content-disposition" => "attachment; filename=\"" . $file_entry->getName() . "\"",
+        ]);
+    }
+
+    // public function destroy($entity_name, $entity_id)
+    // {
+    //     $entity = EntityFactory::build($entity_name);
+
+    //     if ($entity === null || !$entity instanceof Manageable) {
+    //         return $this->respondNotFound();
+    //     }
+
+    //     $repository = RepositoryFactory::build($entity);
+    //     $entity = $repository->pushCriteria(new Criteria($request))
+    //         ->findWithoutFail($entity_id);
+
+    //     if ($entity === null) {
+    //         return $this->respondNotFound();
+    //     }
+
+    //     $file_entry = $entity->file()->find($file_id);
+
+    //     if (!empty($file_entry)) {
+    //         $this->deleteFile($attachment->file);
+    //     }
+
+    //     $entity->delete();
+
+    //     return $this->respondAccepted();
+    // }
+
+    // protected function deleteFile($file_entry)
+    // {
+    //     Storage::disk($file_entry->disk)->delete($file_entry->file_name);
+    //     $file_entry->delete();
+    // }
 }

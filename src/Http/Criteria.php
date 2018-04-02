@@ -65,12 +65,7 @@ class Criteria implements CriteriaContract
         $order_by = $this->request->get(config('manageable.criteria.params.order', '_order'), null);
 
         if (!empty($order_by)) {
-            if (str_contains($order_by, ':')) {
-                list($field, $value) = explode(':', $order_by);
-                $entity = $entity->orderBy($field, $value);
-            } else {
-                $entity = $entity->orderBy($order_by);
-            }
+            $entity = $entity->orderBy($order_by);
         }
 
         return $entity;
