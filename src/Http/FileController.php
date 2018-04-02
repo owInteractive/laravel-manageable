@@ -63,7 +63,7 @@ class FileController extends Controller
 
         $file = $files;
 
-        $entry = $entity->files()->getRelated();
+        $entry = $entity->file()->getRelated();
 
         $entry->original_name = $file->getClientOriginalName();
         $sha1 = sha1($entry->original_name);
@@ -75,11 +75,11 @@ class FileController extends Controller
 
         $entry->custom_properties = array_intersect_key(
             $request->except(['file', 'collection']),
-            $entity->files()->getRelated()->getCustomFieldsAttribute()
+            $entity->file()->getRelated()->getCustomFieldsAttribute()
         );
 
         Storage::disk($entry->disk)->put($entry->file_name, File::get($file));
-        $entity->files()->save($entry);
+        $entity->file()->save($entry);
 
         return $entry;
     }
@@ -99,6 +99,8 @@ class FileController extends Controller
         if ($entity === null) {
             return $this->respondNotFound();
         }
+
+        $this->checkPolicies($entity, 'file-download');
 
         $file_entry = $entity->file()->find($file_id);
 
@@ -120,36 +122,35 @@ class FileController extends Controller
         ]);
     }
 
-    // public function destroy($entity_name, $entity_id)
-    // {
-    //     $entity = EntityFactory::build($entity_name);
+    public function destroy($entity_name, $entity_id, $file_id, Request $request)
+    {
+        $entity = EntityFactory::build($entity_name);
 
-    //     if ($entity === null || !$entity instanceof Manageable) {
-    //         return $this->respondNotFound();
-    //     }
+        if ($entity === null || !$entity instanceof Manageable) {
+            return $this->respondNotFound();
+        }
 
-    //     $repository = RepositoryFactory::build($entity);
-    //     $entity = $repository->pushCriteria(new Criteria($request))
-    //         ->findWithoutFail($entity_id);
+        $repository = RepositoryFactory::build($entity);
+        $entity = $repository->pushCriteria(new Criteria($request))
+            ->findWithoutFail($entity_id);
 
-    //     if ($entity === null) {
-    //         return $this->respondNotFound();
-    //     }
+        if ($entity === null) {
+            return $this->respondNotFound();
+        }
 
-    //     $file_entry = $entity->file()->find($file_id);
+        // The entity must implement the HasFile interface (It should be forced upon by the Criteria?)
+        $file_entry = $entity->file()->find($file_id);
 
-    //     if (!empty($file_entry)) {
-    //         $this->deleteFile($attachment->file);
-    //     }
+        if (!empty($file_entry)) {
+            $this->deleteFile($file_entry);
+        }
 
-    //     $entity->delete();
+        return $this->respondAccepted();
+    }
 
-    //     return $this->respondAccepted();
-    // }
-
-    // protected function deleteFile($file_entry)
-    // {
-    //     Storage::disk($file_entry->disk)->delete($file_entry->file_name);
-    //     $file_entry->delete();
-    // }
+    protected function deleteFile($file_entry)
+    {
+        Storage::disk($file_entry->disk)->delete($file_entry->file_name);
+        $file_entry->delete();
+    }
 }
