@@ -44,10 +44,16 @@ class Facade extends IlluminateFacade
             Route::post('/files', '\\' . FileController::class . '@store')
                 ->name('files.store');
 
-            // Route::post('/{entity}/{id}/attach', '\\' . MediaController::class . '@attach')
-            //     ->where('entity', '[a-zA-Z\/\-]*')
-            //     ->where('id', '[0-9]+')
-            //     ->name('media.store');
+            Route::post('/{entity}/{id}/files', '\\' . FileController::class . '@attach')
+                ->where('entity', '[a-zA-Z\/\-]*')
+                ->where('id', '[0-9]+')
+                ->name('files.attach');
+
+            Route::delete('/{entity}/{id}/files/{file_id}', '\\' . FileController::class . '@destroy')
+                ->where('entity', '[a-zA-Z\/\-]*')
+                ->where('id', '[0-9]+')
+                ->where('file_id', '[0-9]+')
+                ->name('files.destroy');
 
             Route::get('/{entity}/{id}/{file_id}/download', '\\' . FileController::class . '@download')
                 ->where('entity', '[a-zA-Z\/\-]*')
