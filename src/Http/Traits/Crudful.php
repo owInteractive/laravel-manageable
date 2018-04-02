@@ -122,6 +122,8 @@ trait Crudful
 
         $input = $entity_request->fillable();
 
+        // dd($input);
+
         DB::beginTransaction();
         try {
             $entity->preProcess($entity_request->all());
