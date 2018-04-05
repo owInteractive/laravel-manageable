@@ -67,7 +67,9 @@ class Criteria implements CriteriaContract
         if (!empty($order_by)) {
             list($field, $direction) = explode(':', $order_by);
 
-            $entity = $entity->orderBy($field, $direction ?: 'asc');
+            if ($field) {
+                $entity = $entity->orderBy($field, $direction ?: 'asc');
+            }
         }
 
         return $entity;
