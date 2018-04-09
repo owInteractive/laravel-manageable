@@ -104,14 +104,14 @@ class FileController extends Controller
 
         $file_entry = $entity->file()->find($file_id);
 
+        if (empty($file_entry)) {
+            return $this->respondNotFound();
+        }
+
         if ($file_entry->downloads) {
             $file_entry->update([
                 'downloads' => ($file_entry->downloads + 1)
             ]);
-        }
-
-        if (empty($file_entry)) {
-            return $this->respondNotFound();
         }
 
         // Grabs the file from the local storage
