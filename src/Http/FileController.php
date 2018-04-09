@@ -108,6 +108,10 @@ class FileController extends Controller
             return $this->respondNotFound();
         }
 
+        if ($file_entry->downloads) {
+            $file_entry->increment('downloads');
+        }
+
         // Grabs the file from the local storage
         $fs = Storage::disk($file_entry->disk)->getDriver();
         $file_name = $file_entry->file_name;
