@@ -109,9 +109,7 @@ class FileController extends Controller
         }
 
         if ($file_entry->downloads) {
-            $file_entry->update([
-                'downloads' => ($file_entry->downloads + 1)
-            ]);
+            $file_entry->increment('downloads');
         }
 
         // Grabs the file from the local storage
