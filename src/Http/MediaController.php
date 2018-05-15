@@ -15,7 +15,6 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
 use ReflectionClass;
 use Exception;
-use Storage;
 
 class MediaController extends Controller
 {
@@ -94,9 +93,7 @@ class MediaController extends Controller
 
             // check the type of the midia to put the image atributes in array
             if ($this->mediaTypeCheck($media, 'image')) {
-                $storagePath = Storage::disk($media->disk)->getDriver()->getAdapter()->getPathPrefix();
-                $imageFullPath = $storagePath . $media->getUrl();
-                list($width, $height) = getimagesize($imageFullPath);
+                list($width, $height) = getimagesize($media->getPath());
                 $parsed_media = array_merge($parsed_media, ['image' => ['width' => $width, 'height' => $height]]);
             }
             return $parsed_media;
