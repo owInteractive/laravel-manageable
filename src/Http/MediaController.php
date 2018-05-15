@@ -14,6 +14,7 @@ use Ow\Manageable\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
 use ReflectionClass;
+use File;
 
 class MediaController extends Controller
 {
@@ -82,12 +83,27 @@ class MediaController extends Controller
 
     protected function parseMedia($media)
     {
-        return $parsed_media = array_merge([
+        $parsed_media = array_merge([
             '_links' => [
                 'thumb' => $media->hasEdited() ? $media->getFirstMediaUrl('edited') : $media->getUrl(),
                 'original' => $media->getUrl(),
             ]
         ], $media->toArray());
+
+        // check the type of the midia to put the image atributes in array
+        if ($this->midiaTypeCheck($media, 'image')) {
+            $path = storage_path('app/public') . $media->getUrl();
+            if (File::exists($path)) {
+                list($width, $height) = getimagesize($path);
+                $parsed_media = array_merge($parsed_media, ['image' => ['width' => $width, 'height' => $height]]);
+            }
+        }
+        return $parsed_media ;
+    }
+
+    protected function midiaTypeCheck($media, string $mine_type) : bool
+    {
+        return strpos($media->mime_type, $mine_type) !== false ;
     }
 
     /**
