@@ -95,7 +95,7 @@ class MediaController extends Controller
             // check the type of the midia to put the image atributes in array
             if ($this->mediaTypeCheck($media, 'image')) {
                 $storagePath = Storage::disk($media->disk)->getDriver()->getAdapter()->getPathPrefix();
-                $imageFullPath = $storagePath . 'public/' . $media->getUrl();
+                $imageFullPath = $storagePath . $media->getUrl();
                 list($width, $height) = getimagesize($imageFullPath);
                 $parsed_media = array_merge($parsed_media, ['image' => ['width' => $width, 'height' => $height]]);
             }
