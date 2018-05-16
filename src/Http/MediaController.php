@@ -82,12 +82,29 @@ class MediaController extends Controller
 
     protected function parseMedia($media)
     {
-        return $parsed_media = array_merge([
+        $parsed_media = array_merge([
             '_links' => [
                 'thumb' => $media->hasEdited() ? $media->getFirstMediaUrl('edited') : $media->getUrl(),
                 'original' => $media->getUrl(),
             ]
         ], $media->toArray());
+
+            // check the type of the midia to put the image atributes in array
+        try {
+            if ($this->mediaTypeCheck($media, 'image')) {
+                list($width, $height) = getimagesize($media->getPath());
+                $parsed_media = array_merge($parsed_media, ['image' => ['width' => $width, 'height' => $height]]);
+            }
+        } catch (\Exception $e) {
+            $this->logOrThrow($e);
+        }
+
+        return $parsed_media;
+    }
+
+    protected function mediaTypeCheck($media, string $mine_type) : bool
+    {
+        return strpos($media->mime_type, $mine_type) !== false ;
     }
 
     /**
