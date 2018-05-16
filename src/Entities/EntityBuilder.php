@@ -65,6 +65,8 @@ class EntityBuilder
             event($event);
         }
 
+        $entity->postProcess($attributes);
+
         $entity = $this->updateRelations($entity, $attributes);
 
         $entity->save();
@@ -88,6 +90,7 @@ class EntityBuilder
                         case Relations\MorphToMany::class:
                             $morph = true;
                             // Same behaviour for the BelongsToMany
+                            // no break
                         case Relations\BelongsToMany::class:
                             $new_values = array_get($attributes, $key, []);
 
@@ -173,6 +176,7 @@ class EntityBuilder
                             $morph = true;
 
                         // Falls throught HasOne on MorphOn
+                        // no break
                         case Relations\HasOne::class:
                             $new_values = array_get($attributes, $key, []);
 
@@ -186,7 +190,7 @@ class EntityBuilder
                                 $model_type = $relation->getMorphType();
                             }
 
-                            if (count($new_values) > 0) {
+                            if (!empty($new_values)) {
                                 $related = get_class($model->$key()->getRelated());
                                 $related_model = new $related;
 
@@ -239,6 +243,7 @@ class EntityBuilder
                             $morph = true;
                             // Set flag as morph and goes the process for the HasMany
 
+                            // no break
                         case Relations\HasMany::class:
                             $new_values = array_get($attributes, $key, []);
 

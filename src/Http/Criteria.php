@@ -21,7 +21,6 @@ class Criteria implements CriteriaContract
 
     public function apply($entity, RepositoryContract $repository = null)
     {
-        // $orderBy = $this->request->get(config('repository.criteria.params.orderBy', 'orderBy'), null);
         // $sortedBy = $this->request->get(config('repository.criteria.params.sortedBy', 'sortedBy'), 'asc');
         // $searchJoin = $this->request->get(config('repository.criteria.params.searchJoin', 'searchJoin'), null);
         // $sortedBy = !empty($sortedBy) ? $sortedBy : 'asc';
@@ -65,8 +64,12 @@ class Criteria implements CriteriaContract
     {
         $order_by = $this->request->get(config('manageable.criteria.params.order', '_order'), null);
 
-        if (!empty($orderBy)) {
-            $entity = $entity->orderBy($order_by);
+        if (!empty($order_by)) {
+            list($field, $direction) = explode(':', $order_by);
+
+            if ($field) {
+                $entity = $entity->orderBy($field, $direction ?: 'asc');
+            }
         }
 
         return $entity;
@@ -74,14 +77,14 @@ class Criteria implements CriteriaContract
 
     protected function parseSearch($entity)
     {
-        $fields_searchable = $entity->getSearchableFields();
+        $searchable = $entity->getSearchableFields();
 
         $search = $this->request->get(
             config('manageable.criteria.params.search', '_search'),
             null
         );
 
-        if ($search && is_array($fields_searchable) && count($fields_searchable)) {
+        if ($search && is_array($searchable) && count($searchable)) {
             $search_fields = $this->request->get(
                 config('manageable.criteria.params.search_fields', '_search_fields'),
                 null
@@ -91,128 +94,156 @@ class Criteria implements CriteriaContract
                 ? $search_fields
                 : explode(';', $search_fields);
 
-            $fields = $this->parserFieldsSearch($fields_searchable, $search_fields);
+            $fields = $this->parserFieldsSearch($searchable, $search_fields);
 
-            $data = $this->parserSearchData($search);
-            $search = $this->parserSearchValue($search);
+            $search_groups = $this->parseSearchGroups($search);
 
-            $first_field = true;
-            $force_and = false; //strtolower($searchJoin) === 'and';
+            foreach ($search_groups as $search_group) {
+                $entity = $entity->where(
+                    function ($query) use ($search_group, $fields) {
+                        $first_field = true;
+                        // Lets get the contraints for the group, and exclude them from the default fields
 
-            $entity = $entity->where(
-                function ($query) use ($fields, $search, $data, $first_field, $force_and) {
-                    foreach ($fields as $field => $condition) {
-                        if (is_numeric($field)) {
-                            $field = $condition;
-                            $condition = "=";
-                        }
-
-                        $value = null;
-
-                        $condition = trim(strtolower($condition));
-
-                        if (isset($data[$field])) {
-                            $value = ($condition == "like" || $condition == "ilike")
-                                ? "%{$data[$field]}%"
-                                : $data[$field];
-                        } else {
-                            if (!is_null($search)) {
-                                $value = ($condition == "like" || $condition == "ilike")
-                                    ? "%{$search}%"
-                                    : $search;
+                        $contraints = [];
+                        foreach ($search_group as $constraint => $search) {
+                            if (!is_numeric($constraint)) {
+                                // If there is constraint for the search will will perform an intersect
+                                // betwwen the avaialbe fields and the constraints
+                                $contraints[] = $constraint;
                             }
                         }
 
-                        $relation = null;
+                        $default_fields = array_filter($fields, function ($key) use ($contraints) {
+                            return !in_array($key, $contraints);
+                        }, ARRAY_FILTER_USE_KEY);
 
-                        if (stripos($field, '.')) {
-                            $explode = explode('.', $field);
-                            $field = array_pop($explode);
-                            $relation = implode('.', $explode);
-                        }
+                        foreach ($search_group as $constraint => $search) {
+                            $data = [];
+                            if (!is_numeric($constraint)) {
+                                // If there is constraint for the search will will perform an intersect
+                                // betwwen the avaialbe fields and the constraints
+                                $data[$constraint] = $search;
+                                $filtered_fields = array_intersect_key($fields, array_flip([$constraint]));
 
-                        $table = $query->getModel()->getTable();
-
-                        if (!is_null($value)) {
-                            $method = $first_field || $force_and ? 'where' : 'orWhere';
-                            $is_in = strtolower($condition) === 'in';
-
-
-                            if ($is_in && is_string($value)) {
-                                $value = explode(',', $value);
-                            }
-
-                            if (!is_null($relation)) {
-                                $method .= 'Has';
-                                $query->{$method}(
-                                    $relation,
-                                    function ($query) use ($field, $condition, $value, $is_in) {
-                                        if ($is_in) {
-                                            $query->whereIn($field, $value);
-                                            return;
-                                        }
-                                        $query->where($field, $condition, $value);
-                                    }
-                                );
+                                if (!isset($filtered_fields[$constraint])) {
+                                    $filtered_fields[$constraint] = '=';
+                                }
                             } else {
-                                if ($is_in) {
-                                    $method .= 'In';
-                                    $query->{$method}($table . '.' . $field, $value);
-                                } else {
-                                    $query->{$method}($table . '.' . $field, $condition, $value);
+                                $filtered_fields = $default_fields;
+                            }
+
+                            // dump($data);
+
+                            foreach ($filtered_fields as $field => $condition) {
+                                if (is_numeric($field)) {
+                                    $field = $condition;
+                                    $condition = "=";
+                                }
+
+                                $value = null;
+
+                                $condition = trim(strtolower($condition));
+
+                                if (isset($data[$field])) {
+                                    $value = ($condition == "like" || $condition == "ilike")
+                                        ? "%{$data[$field]}%"
+                                        : $data[$field];
+                                } elseif (!is_null($search)) {
+                                    $value = ($condition == "like" || $condition == "ilike")
+                                        ? "%{$search}%"
+                                        : $search;
+                                }
+
+                                $relation = null;
+
+                                if (stripos($field, '.')) {
+                                    $explode = explode('.', $field);
+                                    $field = array_pop($explode);
+                                    $relation = implode('.', $explode);
+                                }
+
+                                $table = $query->getModel()->getTable();
+
+                                // dump($table, $field, $condition, $value);
+
+                                if (!is_null($value)) {
+                                    $method = $first_field ? 'where' : 'orWhere';
+                                    $is_in = strtolower($condition) === 'in';
+
+                                    if ($is_in && is_string($value)) {
+                                        $value = explode(',', $value);
+                                    }
+
+                                    if (!is_null($relation)) {
+                                        $method .= 'Has';
+                                        $query->{$method}(
+                                            $relation,
+                                            function ($query) use ($field, $condition, $value, $is_in) {
+                                                if ($is_in) {
+                                                    $query->whereIn($field, $value);
+                                                    return;
+                                                }
+                                                $query->where($field, $condition, $value);
+                                            }
+                                        );
+                                    } else {
+                                        if ($is_in) {
+                                            $method .= 'In';
+                                            $query->{$method}($table . '.' . $field, $value);
+                                        } else {
+                                            $query->{$method}($table . '.' . $field, $condition, $value);
+                                        }
+                                    }
+
+                                    $first_field = false;
                                 }
                             }
-
-                            $first_field = false;
                         }
                     }
-                }
-            );
+                );
+            }
         }
+
+        // dd($entity->getQuery()->toSql(), $entity->getQuery()->getBindings());
 
         return $entity;
     }
 
-    protected function parserSearchData($search)
+    protected function parseSearchGroups($search)
     {
-        $search_data = [];
-
-        if (stripos($search, ':')) {
-            $fields = explode(';', $search);
-
-            foreach ($fields as $row) {
-                try {
-                    list($field, $value) = explode(':', $row);
-                    $search_data[$field] = $value;
-                } catch (\Exception $e) {
-                    // Surround offset error
-                }
-            }
+        if (is_string($search)) {
+            return [[$search]];
         }
 
-        return $search_data;
-    }
+        $search_groups = [];
+        foreach ($search as $group) {
+            $items = explode('|', $group);
 
-    protected function parserSearchValue($search)
-    {
-        if (stripos($search, ';') || stripos($search, ':')) {
-            $values = explode(';', $search);
-
-            foreach ($values as $value) {
-                $s = explode(':', $value);
-                if (count($s) == 1) {
-                    return $s[0];
+            $search_group = [];
+            foreach ($items as $item) {
+                if (stripos($item, ':')) {
+                    try {
+                        list($field, $value) = explode(':', $item);
+                        $search_group[$field] = $value;
+                    } catch (\Exception $e) {
+                        // Surround offset error
+                    }
+                } else {
+                    array_push($search_group, $item);
                 }
             }
 
-            return null;
+            array_push($search_groups, $search_group);
         }
 
-        return $search;
+        return $search_groups;
     }
 
     protected function parserFieldsSearch(array $fields = [], array $search_fields = null)
     {
+        /**
+         * If there is a group of
+         */
         if (!is_null($search_fields) && count($search_fields)) {
             $conditions = config('repository.criteria.conditions', ['=', 'like']);
             $original_fields = $fields;

@@ -44,16 +44,22 @@ class Facade extends IlluminateFacade
             Route::post('/files', '\\' . FileController::class . '@store')
                 ->name('files.store');
 
-            Route::post('/{entity}/{id}/attach', '\\' . MediaController::class . '@attach')
+            Route::post('/{entity}/{id}/files', '\\' . FileController::class . '@attach')
                 ->where('entity', '[a-zA-Z\/\-]*')
                 ->where('id', '[0-9]+')
-                ->name('media.store');
+                ->name('files.attach');
 
-            // Route::delete('/{entity}/{id}/media/{media_id}', '\\' . MediaController::class . '@destroy')
-            //     ->where('id', '[0-9]+')
-            //     ->where('entity', '[a-zA-Z\/\-]*')
-            //     ->where('media_id', '[0-9]+')
-            //     ->name('media.destroy');
+            Route::delete('/{entity}/{id}/files/{file_id}', '\\' . FileController::class . '@destroy')
+                ->where('entity', '[a-zA-Z\/\-]*')
+                ->where('id', '[0-9]+')
+                ->where('file_id', '[0-9]+')
+                ->name('files.destroy');
+
+            Route::get('/{entity}/{id}/{file_id}/download', '\\' . FileController::class . '@download')
+                ->where('entity', '[a-zA-Z\/\-]*')
+                ->where('id', '[0-9]+')
+                ->where('file_id', '[0-9]+')
+                ->name('files.show');
 
             // Management entities
             Route::get('/{entity}', '\\' . EntityController::class . '@index')
