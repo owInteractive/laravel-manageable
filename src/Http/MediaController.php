@@ -14,7 +14,6 @@ use Ow\Manageable\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
 use ReflectionClass;
-use Exception;
 
 class MediaController extends Controller
 {
@@ -83,23 +82,24 @@ class MediaController extends Controller
 
     protected function parseMedia($media)
     {
-        try {
-            $parsed_media = array_merge([
-                '_links' => [
-                    'thumb' => $media->hasEdited() ? $media->getFirstMediaUrl('edited') : $media->getUrl(),
-                    'original' => $media->getUrl(),
-                ]
-            ], $media->toArray());
+        $parsed_media = array_merge([
+            '_links' => [
+                'thumb' => $media->hasEdited() ? $media->getFirstMediaUrl('edited') : $media->getUrl(),
+                'original' => $media->getUrl(),
+            ]
+        ], $media->toArray());
 
             // check the type of the midia to put the image atributes in array
+        try {
             if ($this->mediaTypeCheck($media, 'image')) {
                 list($width, $height) = getimagesize($media->getPath());
                 $parsed_media = array_merge($parsed_media, ['image' => ['width' => $width, 'height' => $height]]);
             }
-            return $parsed_media;
-        } catch (Exception $e) {
-            return ['error' => $e->getMessage()];
+        } catch (\Exception $e) {
+            $this->logOrThrow($e);
         }
+
+        return $parsed_media;
     }
 
     protected function mediaTypeCheck($media, string $mine_type) : bool
