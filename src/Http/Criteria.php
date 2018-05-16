@@ -26,6 +26,7 @@ class Criteria implements CriteriaContract
         // $sortedBy = !empty($sortedBy) ? $sortedBy : 'asc';
 
         $entity = $this->parseSearch($entity);
+        $entity = $this->parseScope($entity);
         $entity = $this->parseFilter($entity);
         $entity = $this->parseWith($entity);
         $entity = $this->parseOrderBy($entity);
@@ -283,5 +284,20 @@ class Criteria implements CriteriaContract
         }
 
         return $fields;
+    }
+
+    protected function parseScope($entity)
+    {
+        $scopes = $this->request->get(config('manageable.criteria.params.scope', '_scope'), null);
+
+        if (!empty($scopes)) {
+            foreach ($scopes as $scope) {
+                if (!empty($scope)) {
+                    $entity = $entity->{$scope}();
+                }
+            }
+        }
+
+        return $entity;
     }
 }
