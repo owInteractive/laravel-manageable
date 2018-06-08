@@ -28,12 +28,12 @@ class EntityBuilder
 
         $this->resetEntity();
 
+        $entity->postProcess($attributes);
+
         $event = EventFactory::build($entity, $attributes, 'stored');
         if ($event !== null) {
             event($event);
         }
-
-        $entity->postProcess($attributes);
 
         $entity = $this->updateRelations($entity, $attributes);
 
@@ -60,12 +60,12 @@ class EntityBuilder
 
         $this->resetEntity();
 
+        $entity->postProcess($attributes);
+
         $event = EventFactory::build($entity, $attributes, 'updated');
         if ($event !== null) {
             event($event);
         }
-
-        $entity->postProcess($attributes);
 
         $entity = $this->updateRelations($entity, $attributes);
 
