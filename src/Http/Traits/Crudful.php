@@ -131,8 +131,6 @@ trait Crudful
             $builder = new EntityBuilder($instance);
             $entity = $builder->update($entity_id, $input);
 
-            $entity->postProcess($entity_request->all());
-
             $this->setMessage("{$entity_name} atualizado com sucesso");
 
             DB::commit();
