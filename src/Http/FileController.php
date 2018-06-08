@@ -7,6 +7,7 @@ use Ow\Manageable\Contracts\Manageable;
 
 use Ow\Manageable\Entities\RepositoryFactory;
 use Ow\Manageable\Entities\EntityFactory;
+use Ow\Manageable\Events\FileAttachedTo;
 use Ow\Manageable\Http\Criteria;
 use Ow\Manageable\Http\Request;
 
@@ -46,6 +47,8 @@ class FileController extends Controller
         $this->checkPolicies($entity, 'file-attach');
 
         $entry = $this->storeFile($entity, $request);
+
+        event(new FileAttachedTo($entity, $entry));
 
         return $this->respond($entry);
     }
