@@ -69,7 +69,7 @@ class FileController extends Controller
         $entry = $entity->file()->getRelated();
 
         $entry->original_name = $file->getClientOriginalName();
-        $sha1 = sha1($entry->original_name);
+        $sha1 = sha1($entry->original_name . time());
         $extension = $file->getClientOriginalExtension();
         $entry->file_name = date('Y-m-d-h-i-s') . "_" . $sha1 . "." . $extension;
         $entry->size = File::size($file);
