@@ -111,7 +111,7 @@ class FileController extends Controller
             return $this->respondNotFound();
         }
 
-        if ($file_entry->downloads) {
+        if (!empty($file_entry->downloads) || ($file_entry->downloads == 0)) {
             $file_entry->increment('downloads');
         }
 
