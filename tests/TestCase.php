@@ -2,9 +2,9 @@
 
 namespace Ow\Manageable\Tests;
 
-use Orchestra\Testbench\TestCase;
+use Orchestra\Testbench\TestCase as OrchestraTestCase;
 
-class DatabaseTest extends TestCase
+class TestCase extends OrchestraTestCase
 {
     /**
      * Setup the test environment.
