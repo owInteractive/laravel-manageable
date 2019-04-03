@@ -14,3 +14,4 @@ This is a Laravel Package used by Owinterative to make the entities Manageable f
 - **\[wip\]** documentation for usage
 - better README.md and ghpage
 - **\[wip\]** Unit testisting
+- :beer: Publish on packagist
